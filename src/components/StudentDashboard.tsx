@@ -58,9 +58,10 @@ export function StudentDashboard() {
     }
 
     try {
-      const success = await joinRoom(roomCode);
+      // Call joinRoom with the trimmed room code
+      const success = await joinRoom(roomCode.trim());
       if (success) {
-        const room = getRoomByCode(roomCode);
+        const room = getRoomByCode(roomCode.trim());
         if (room && user) {
           await markAttendance(room.id, user.id, "present");
           setRoomCode("");
@@ -68,20 +69,20 @@ export function StudentDashboard() {
           
           toast({
             title: "Success",
-            description: "Attendance marked successfully",
+            description: `Attendance marked successfully for ${room.name}`,
           });
         }
       } else {
         toast({
           title: "Error",
-          description: "Invalid room code. Please try again.",
+          description: "Invalid room code. Please check and try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to join room",
+        description: "Failed to join room. Please try again later.",
         variant: "destructive",
       });
     }

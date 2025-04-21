@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Room, AttendanceRecord, Subject } from "@/types";
 import { useAuth } from "./AuthContext";
@@ -129,13 +128,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Join a room (for students)
+  // Join a room (for students) - fixed to make room code case-insensitive
   const joinRoom = async (roomCode: string): Promise<boolean> => {
     setIsLoading(true);
     
     return new Promise((resolve) => {
       setTimeout(() => {
-        const room = rooms.find((r) => r.roomCode === roomCode);
+        // Make the room code comparison case-insensitive
+        const normalizedRoomCode = roomCode.trim().toUpperCase();
+        const room = rooms.find((r) => r.roomCode.toUpperCase() === normalizedRoomCode);
         setIsLoading(false);
         resolve(!!room);
       }, 500);
@@ -221,9 +222,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     return rooms.find((room) => room.id === roomId);
   };
 
-  // Get a room by room code
+  // Get a room by room code - also update this function to be case-insensitive
   const getRoomByCode = (roomCode: string): Room | undefined => {
-    return rooms.find((room) => room.roomCode === roomCode);
+    const normalizedRoomCode = roomCode.trim().toUpperCase();
+    return rooms.find((room) => room.roomCode.toUpperCase() === normalizedRoomCode);
   };
 
   // Get a subject by ID
