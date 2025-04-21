@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, UserRole } from "@/types";
 
@@ -58,10 +59,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call
     return new Promise((resolve) => {
       setTimeout(() => {
+        // Trim and normalize the email for consistent comparison
+        const normalizedEmail = email.trim().toLowerCase();
+        
         // Find user with case-insensitive email comparison
         const foundUser = USERS.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase()
+          (u) => u.email.toLowerCase() === normalizedEmail
         );
+        
+        // Debug log to check what's happening
+        console.log("Login attempt:", { 
+          normalizedEmail, 
+          foundUser, 
+          expectedPassword: foundUser ? PASSWORDS[foundUser.email] : 'user not found',
+          providedPassword: password
+        });
         
         // If user exists, check if the password matches for the user's actual email
         const isValid = foundUser && PASSWORDS[foundUser.email] === password;
@@ -72,7 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           sessionStorage.setItem('user', JSON.stringify(foundUser));
           resolve(true);
         } else {
-          console.log("Login failed", { email, foundUser, isValid });
+          console.log("Login failed", { 
+            email: normalizedEmail, 
+            foundUser, 
+            isValid,
+            passwordMatch: foundUser ? (PASSWORDS[foundUser.email] === password) : false
+          });
           resolve(false);
         }
         setIsLoading(false);

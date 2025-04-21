@@ -30,14 +30,30 @@ export function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Trim inputs to prevent whitespace issues
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    
     if (mode === "login") {
-      const success = await login(email, password);
+      if (!trimmedEmail || !trimmedPassword) {
+        toast({
+          title: "Login Failed",
+          description: "Please enter both email and password.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const success = await login(trimmedEmail, trimmedPassword);
       if (!success) {
         toast({
           title: "Login Failed",
           description: "Invalid email or password. Please try again.",
           variant: "destructive",
         });
+        console.log("Login attempt failed for:", trimmedEmail);
+      } else {
+        console.log("Login successful for:", trimmedEmail);
       }
     } else {
       if (!name.trim()) {
@@ -49,7 +65,16 @@ export function AuthForm() {
         return;
       }
       
-      const success = await register(name, email, password, role);
+      if (!trimmedEmail || !trimmedPassword) {
+        toast({
+          title: "Registration Failed",
+          description: "Please enter both email and password.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const success = await register(name.trim(), trimmedEmail, trimmedPassword, role);
       if (!success) {
         toast({
           title: "Registration Failed",
