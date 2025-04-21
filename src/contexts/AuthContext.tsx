@@ -58,8 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call
     return new Promise((resolve) => {
       setTimeout(() => {
-        const foundUser = USERS.find((u) => u.email === email);
-        const isValid = foundUser && PASSWORDS[email] === password;
+        const foundUser = USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        const isValid = foundUser && PASSWORDS[foundUser.email] === password;
         
         if (isValid && foundUser) {
           setUser(foundUser);
@@ -85,8 +85,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call for registration
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Check if email already exists
-        const emailExists = USERS.some((u) => u.email === email);
+        // Check if email already exists (case-insensitive)
+        const emailExists = USERS.some((u) => u.email.toLowerCase() === email.toLowerCase());
         
         if (emailExists) {
           resolve(false);
