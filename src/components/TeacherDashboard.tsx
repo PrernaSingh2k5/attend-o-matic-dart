@@ -37,7 +37,7 @@ import { Calendar, Clock, Users } from "lucide-react";
 
 // Component to show attendance details in a room
 const RoomAttendance = ({ room }: { room: Room }) => {
-  const { getRoomAttendance, getSubject, getStudentById } = useData();
+  const { getRoomAttendance, getSubject } = useData();
   const { getUsers } = useAuth();
   const subject = getSubject(room.subject);
   const attendanceRecords = getRoomAttendance(room.id);
@@ -59,7 +59,8 @@ const RoomAttendance = ({ room }: { room: Room }) => {
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
   );
-  
+
+  // Stats cards section
   return (
     <div className="space-y-4">
       <div className="bg-white p-4 rounded-lg shadow">
@@ -135,15 +136,23 @@ const RoomAttendance = ({ room }: { room: Room }) => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groupedByDate[date].map(record => {
-                      const student = students.find(s => s.id === record.studentId);
+                    {students.map(student => {
+                      const record = groupedByDate[date].find(r => r.studentId === student.id);
                       return (
-                        <TableRow key={record.id}>
-                          <TableCell>{student ? student.name : `Student ${record.studentId}`}</TableCell>
-                          <TableCell className={record.status === 'present' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                        <TableRow key={student.id}>
+                          <TableCell>{student.name}</TableCell>
+                          <TableCell 
+                            className={
+                              record ? 
+                                record.status === 'present' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'
+                              : 'text-gray-400'
+                            }
+                          >
+                            {record ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : 'Not Marked'}
                           </TableCell>
-                          <TableCell>{new Date(record.date).toLocaleTimeString()}</TableCell>
+                          <TableCell>
+                            {record ? new Date(record.date).toLocaleTimeString() : '-'}
+                          </TableCell>
                         </TableRow>
                       );
                     })}
