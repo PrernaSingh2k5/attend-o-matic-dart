@@ -32,6 +32,13 @@ export default {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
+				dart: {
+					blue: '#0175C2',
+					darkblue: '#02569B',
+					purple: '#9b87f5',
+					lightblue: '#65C8D0',
+					gray: '#4A4A4A',
+				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
