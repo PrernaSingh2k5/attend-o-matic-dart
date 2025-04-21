@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, UserRole } from "@/types";
 
@@ -7,6 +6,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<boolean>;
+  getUsers: () => User[];
   isLoading: boolean;
 }
 
@@ -125,6 +125,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('user');
   };
 
+  // Get all users (for display purposes)
+  const getUsers = (): User[] => {
+    return USERS;
+  };
+
   // Check for existing user session on component mount
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -139,7 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, getUsers, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -29,7 +29,7 @@ import { Calendar, Clock, Users } from "lucide-react";
 
 // Component to show attendance details in a room
 const RoomAttendance = ({ room }: { room: Room }) => {
-  const { getRoomAttendance, getSubject } = useData();
+  const { getRoomAttendance, getSubject, getStudentById } = useData();
   const subject = getSubject(room.subject);
   const attendanceRecords = getRoomAttendance(room.id);
   
@@ -120,15 +120,18 @@ const RoomAttendance = ({ room }: { room: Room }) => {
                     <div>Status</div>
                     <div>Time</div>
                   </div>
-                  {groupedByDate[date].map(record => (
-                    <div key={record.id} className="grid grid-cols-3">
-                      <div>{record.studentId === 's1' ? 'Alex Johnson' : 'Sam Wilson'}</div>
-                      <div className={record.status === 'present' ? 'text-green-600' : 'text-red-600'}>
-                        {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                  {groupedByDate[date].map(record => {
+                    const student = getStudentById(record.studentId);
+                    return (
+                      <div key={record.id} className="grid grid-cols-3">
+                        <div>{student ? student.name : `Student ${record.studentId}`}</div>
+                        <div className={record.status === 'present' ? 'text-green-600' : 'text-red-600'}>
+                          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                        </div>
+                        <div>{new Date(record.date).toLocaleTimeString()}</div>
                       </div>
-                      <div>{new Date(record.date).toLocaleTimeString()}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

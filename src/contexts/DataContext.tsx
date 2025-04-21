@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Room, AttendanceRecord, Subject } from "@/types";
+import { Room, AttendanceRecord, Subject, User } from "@/types";
 import { useAuth } from "./AuthContext";
 
 interface DataContextType {
@@ -18,10 +18,10 @@ interface DataContextType {
   getSubject: (subjectId: string) => Subject | undefined;
   getSubjectByName: (name: string) => Subject | undefined;
   calculateAttendancePercentage: (studentId: string, roomId?: string) => number;
+  getStudentById: (studentId: string) => User | undefined;
   isLoading: boolean;
 }
 
-// Mock data
 const SUBJECTS: Subject[] = [
   { id: "sub1", name: "Mathematics", code: "MATH101" },
   { id: "sub2", name: "Science", code: "SCI101" },
@@ -57,34 +57,29 @@ const INITIAL_ROOMS: Room[] = [
   },
 ];
 
-// Generate some mock attendance records
 const generateMockAttendance = (): AttendanceRecord[] => {
   const records: AttendanceRecord[] = [];
   const today = new Date();
   
-  // Create attendance records for the past 10 days
   for (let i = 0; i < 10; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
     
-    // For each room
     INITIAL_ROOMS.forEach(room => {
-      // For student1
       records.push({
         id: `att-s1-${room.id}-${i}`,
         roomId: room.id,
         studentId: "s1",
         date: date.toISOString(),
-        status: Math.random() > 0.2 ? "present" : "absent", // 80% chance of being present
+        status: Math.random() > 0.2 ? "present" : "absent",
       });
       
-      // For student2
       records.push({
         id: `att-s2-${room.id}-${i}`,
         roomId: room.id,
         studentId: "s2",
         date: date.toISOString(),
-        status: Math.random() > 0.3 ? "present" : "absent", // 70% chance of being present
+        status: Math.random() > 0.3 ? "present" : "absent",
       });
     });
   }
@@ -97,13 +92,12 @@ const INITIAL_ATTENDANCE: AttendanceRecord[] = generateMockAttendance();
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, getUsers } = useAuth();
   const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(INITIAL_ATTENDANCE);
   const [subjects] = useState<Subject[]>(SUBJECTS);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Create a new room (for teachers)
   const createRoom = async (
     roomData: Omit<Room, "id" | "createdAt" | "roomCode">
   ): Promise<Room> => {
@@ -111,7 +105,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Generate a random room code
         const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         
         const newRoom: Room = {
@@ -128,13 +121,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Join a room (for students) - fixed to make room code case-insensitive
   const joinRoom = async (roomCode: string): Promise<boolean> => {
     setIsLoading(true);
     
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Make the room code comparison case-insensitive
         const normalizedRoomCode = roomCode.trim().toUpperCase();
         const room = rooms.find((r) => r.roomCode.toUpperCase() === normalizedRoomCode);
         setIsLoading(false);
@@ -143,7 +134,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Mark attendance
   const markAttendance = async (
     roomId: string,
     studentId: string,
@@ -155,7 +145,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       setTimeout(() => {
         const today = new Date().toISOString().split("T")[0];
         
-        // Check if an attendance record already exists for today
         const existingRecord = attendanceRecords.find(
           (record) => 
             record.roomId === roomId && 
@@ -164,7 +153,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         );
         
         if (existingRecord) {
-          // Update existing record
           setAttendanceRecords((prev) =>
             prev.map((record) =>
               record.id === existingRecord.id
@@ -173,7 +161,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             )
           );
         } else {
-          // Create new record
           const newRecord: AttendanceRecord = {
             id: `att-${studentId}-${roomId}-${Date.now()}`,
             roomId,
@@ -191,22 +178,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Get attendance records for a student
   const getStudentAttendance = (studentId: string): AttendanceRecord[] => {
     return attendanceRecords.filter((record) => record.studentId === studentId);
   };
 
-  // Get attendance records for a room
   const getRoomAttendance = (roomId: string): AttendanceRecord[] => {
     return attendanceRecords.filter((record) => record.roomId === roomId);
   };
 
-  // Get rooms created by a teacher
   const getTeacherRooms = (teacherId: string): Room[] => {
     return rooms.filter((room) => room.teacherId === teacherId);
   };
 
-  // Get rooms a student has attended
   const getStudentRooms = (studentId: string): Room[] => {
     const roomIds = new Set(
       attendanceRecords
@@ -217,28 +200,23 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     return rooms.filter((room) => roomIds.has(room.id));
   };
 
-  // Get a room by ID
   const getRoom = (roomId: string): Room | undefined => {
     return rooms.find((room) => room.id === roomId);
   };
 
-  // Get a room by room code - also update this function to be case-insensitive
   const getRoomByCode = (roomCode: string): Room | undefined => {
     const normalizedRoomCode = roomCode.trim().toUpperCase();
     return rooms.find((room) => room.roomCode.toUpperCase() === normalizedRoomCode);
   };
 
-  // Get a subject by ID
   const getSubject = (subjectId: string): Subject | undefined => {
     return subjects.find((subject) => subject.id === subjectId);
   };
 
-  // Get a subject by name
   const getSubjectByName = (name: string): Subject | undefined => {
     return subjects.find((subject) => subject.name.toLowerCase() === name.toLowerCase());
   };
 
-  // Calculate attendance percentage for a student (overall or for a specific room)
   const calculateAttendancePercentage = (studentId: string, roomId?: string): number => {
     let records = attendanceRecords.filter((record) => record.studentId === studentId);
     
@@ -250,6 +228,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     
     const presentCount = records.filter((record) => record.status === "present").length;
     return Math.round((presentCount / records.length) * 100);
+  };
+
+  const getStudentById = (studentId: string): User | undefined => {
+    const users = getUsers();
+    return users.find(user => user.id === studentId && user.role === 'student');
   };
 
   return (
@@ -270,6 +253,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         getSubject,
         getSubjectByName,
         calculateAttendancePercentage,
+        getStudentById,
         isLoading,
       }}
     >
