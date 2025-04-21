@@ -58,7 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call
     return new Promise((resolve) => {
       setTimeout(() => {
-        const foundUser = USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        // Find user with case-insensitive email comparison
+        const foundUser = USERS.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase()
+        );
+        
+        // If user exists, check if the password matches for the user's actual email
         const isValid = foundUser && PASSWORDS[foundUser.email] === password;
         
         if (isValid && foundUser) {
@@ -67,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           sessionStorage.setItem('user', JSON.stringify(foundUser));
           resolve(true);
         } else {
+          console.log("Login failed", { email, foundUser, isValid });
           resolve(false);
         }
         setIsLoading(false);
