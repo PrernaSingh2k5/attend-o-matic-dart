@@ -23,6 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Room, AttendanceRecord } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { Calendar, Clock, Users } from "lucide-react";
@@ -30,8 +38,12 @@ import { Calendar, Clock, Users } from "lucide-react";
 // Component to show attendance details in a room
 const RoomAttendance = ({ room }: { room: Room }) => {
   const { getRoomAttendance, getSubject, getStudentById } = useData();
+  const { getUsers } = useAuth();
   const subject = getSubject(room.subject);
   const attendanceRecords = getRoomAttendance(room.id);
+  
+  // Get all students
+  const students = getUsers().filter(user => user.role === 'student');
   
   // Group attendance by date
   const groupedByDate = attendanceRecords.reduce((acc, record) => {
@@ -114,25 +126,29 @@ const RoomAttendance = ({ room }: { room: Room }) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 font-medium">
-                    <div>Student</div>
-                    <div>Status</div>
-                    <div>Time</div>
-                  </div>
-                  {groupedByDate[date].map(record => {
-                    const student = getStudentById(record.studentId);
-                    return (
-                      <div key={record.id} className="grid grid-cols-3">
-                        <div>{student ? student.name : `Student ${record.studentId}`}</div>
-                        <div className={record.status === 'present' ? 'text-green-600' : 'text-red-600'}>
-                          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                        </div>
-                        <div>{new Date(record.date).toLocaleTimeString()}</div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupedByDate[date].map(record => {
+                      const student = students.find(s => s.id === record.studentId);
+                      return (
+                        <TableRow key={record.id}>
+                          <TableCell>{student ? student.name : `Student ${record.studentId}`}</TableCell>
+                          <TableCell className={record.status === 'present' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                          </TableCell>
+                          <TableCell>{new Date(record.date).toLocaleTimeString()}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           ))}
